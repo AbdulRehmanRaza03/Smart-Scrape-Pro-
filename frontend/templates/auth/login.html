@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartScrape Pro — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#080c14;--bg2:#0d1320;--bg3:#111927;--border:#1e2d45;--accent:#00d4ff;--accent2:#7c3aed;--text:#e2e8f0;--muted:#64748b;--danger:#ef4444;--ok:#10b981}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 10% 50%,rgba(0,212,255,.07) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 90% 50%,rgba(124,58,237,.09) 0%,transparent 60%);pointer-events:none}
+
+  /* GRID BACKGROUND */
+  body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(30,45,69,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(30,45,69,.15) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+
+  .split{display:flex;width:100vw;height:100vh}
+
+  /* LEFT SIDE - BRANDING */
+  .left{flex:1;display:flex;flex-direction:column;justify-content:center;padding:64px;position:relative;overflow:hidden}
+  .left .glow{position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(0,212,255,.08) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+  .logo{display:flex;align-items:center;gap:12px;margin-bottom:48px}
+  .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+  .logo-text{font-size:1.3rem;font-weight:800;letter-spacing:-.02em}
+  .hero-title{font-size:3rem;font-weight:800;line-height:1.1;margin-bottom:20px;letter-spacing:-.03em}
+  .hero-title span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .hero-sub{color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:40px;max-width:420px}
+  .feature-list{display:flex;flex-direction:column;gap:14px}
+  .feature{display:flex;align-items:center;gap:12px;font-size:.85rem}
+  .feature-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem}
+  .feature span{color:var(--muted)}
+  .feature strong{color:var(--text)}
+
+  /* RIGHT SIDE - FORM */
+  .right{width:440px;display:flex;align-items:center;justify-content:center;padding:32px;border-left:1px solid var(--border);background:rgba(13,19,32,.6);backdrop-filter:blur(20px)}
+  .form-box{width:100%;max-width:380px}
+  .form-box h2{font-size:1.5rem;font-weight:800;margin-bottom:6px}
+  .form-box p{color:var(--muted);font-size:.85rem;margin-bottom:28px}
+
+  /* TABS */
+  .auth-tabs{display:flex;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:24px}
+  .auth-tab{flex:1;padding:9px;text-align:center;border-radius:7px;cursor:pointer;font-size:.82rem;font-weight:700;color:var(--muted);transition:.15s;font-family:'Syne',sans-serif}
+  .auth-tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .auth-panel{display:none}
+  .auth-panel.active{display:block}
+
+  .form-group{margin-bottom:14px}
+  label{display:block;font-size:.72rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:.05em;margin-bottom:5px}
+  input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'Space Mono',monospace;font-size:.82rem;outline:none;transition:.15s}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,.08)}
+  input::placeholder{color:var(--muted)}
+
+  .btn-auth{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:8px;color:#fff;font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer;transition:.2s;letter-spacing:.02em;margin-top:8px}
+  .btn-auth:hover{opacity:.88;transform:translateY(-1px)}
+  .btn-auth:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  .divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:.75rem}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  .error-msg{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--danger);border-radius:8px;padding:10px 14px;font-size:.78rem;margin-bottom:14px;display:none}
+  .success-msg{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--ok);border-radius:8px;padding:10px 14px;font-size:.78rem;margin-bottom:14px;display:none}
+
+  .terms{font-size:.7rem;color:var(--muted);text-align:center;margin-top:14px;line-height:1.6}
+  .terms a{color:var(--accent);text-decoration:none}
+
+  @media(max-width:900px){
+    .left{display:none}
+    .right{width:100%;border-left:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="split">
+  <!-- LEFT BRANDING -->
+  <div class="left">
+    <div class="glow"></div>
+    <div class="logo">
+      <div class="logo-icon">🕷️</div>
+      <div class="logo-text">SmartScrape<span style="color:var(--accent)">Pro</span></div>
+    </div>
+    <h1 class="hero-title">Enterprise<br/><span>Web Scraping</span><br/>Made Simple</h1>
+    <p class="hero-sub">Automate data collection at scale. Multi-user SaaS platform with Playwright engine, job scheduling, and secure data isolation.</p>
+    <div class="feature-list">
+      <div class="feature">
+        <div class="feature-icon" style="background:rgba(0,212,255,.1)">⚡</div>
+        <div><strong>Playwright Engine</strong> <span>— handles JS-heavy sites with anti-bot support</span></div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon" style="background:rgba(124,58,237,.1)">📅</div>
+        <div><strong>Job Scheduling</strong> <span>— cron-based automation on Pro/Business plans</span></div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon" style="background:rgba(16,185,129,.1)">🔐</div>
+        <div><strong>Secure & Isolated</strong> <span>— each user sees only their own data</span></div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon" style="background:rgba(245,158,11,.1)">💳</div>
+        <div><strong>Flexible Payments</strong> <span>— Stripe, Easypaisa, JazzCash, Bank Transfer</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="right">
+    <div class="form-box">
+      <h2>Get Started</h2>
+      <p>Sign in to your account or create a new one</p>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login',this)">Sign In</div>
+        <div class="auth-tab" onclick="switchTab('signup',this)">Create Account</div>
+      </div>
+
+      <div id="err-msg" class="error-msg"></div>
+      <div id="ok-msg" class="success-msg"></div>
+
+      <!-- LOGIN -->
+      <div id="panel-login" class="auth-panel active">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="l-email" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')login()"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input id="l-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"/>
+        </div>
+        <button class="btn-auth" id="login-btn" onclick="login()">Sign In →</button>
+        <p class="terms">Don't have an account? <a href="#" onclick="switchTabByName('signup')">Create one free</a></p>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="panel-signup" class="auth-panel">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input id="s-name" placeholder="Abdul Rehman" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label>Username</label>
+            <input id="s-user" placeholder="abdulrehman" />
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <input id="s-country" placeholder="Pakistan" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="s-email" type="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Password (min 8 chars, 1 uppercase, 1 number)</label>
+          <input id="s-pass" type="password" placeholder="••••••••" />
+        </div>
+        <button class="btn-auth" id="signup-btn" onclick="signup()">Create Free Account →</button>
+        <p class="terms">By signing up you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '/api/v1';
+
+  // Redirect if already logged in
+  if (localStorage.getItem('ssp_token')) {
+    window.location.href = '/dashboard';
+  }
+
+  function switchTab(tab, el) {
+    ['login','signup'].forEach(t => {
+      document.getElementById(`panel-${t}`).classList.remove('active');
+    });
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`panel-${tab}`).classList.add('active');
+    el.classList.add('active');
+    clearMsgs();
+  }
+
+  function switchTabByName(tab) {
+    const tabs = document.querySelectorAll('.auth-tab');
+    const idx = tab === 'login' ? 0 : 1;
+    switchTab(tab, tabs[idx]);
+  }
+
+  function showErr(msg) {
+    const el = document.getElementById('err-msg');
+    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('ok-msg').style.display = 'none';
+  }
+
+  function showOk(msg) {
+    const el = document.getElementById('ok-msg');
+    el.textContent = msg; el.style.display = 'block';
+    document.getElementById('err-msg').style.display = 'none';
+  }
+
+  function clearMsgs() {
+    document.getElementById('err-msg').style.display = 'none';
+    document.getElementById('ok-msg').style.display = 'none';
+  }
+
+  async function login() {
+    const email = document.getElementById('l-email').value.trim();
+    const password = document.getElementById('l-pass').value;
+    if (!email || !password) { showErr('Email and password required'); return; }
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Login failed');
+
+      localStorage.setItem('ssp_token', data.access_token);
+      localStorage.setItem('ssp_refresh', data.refresh_token);
+      localStorage.setItem('ssp_role', data.role);
+
+      showOk('Login successful! Redirecting...');
+      setTimeout(() => {
+        window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
+      }, 800);
+    } catch(e) {
+      showErr(e.message);
+      btn.disabled = false; btn.textContent = 'Sign In →';
+    }
+  }
+
+  async function signup() {
+    const full_name = document.getElementById('s-name').value.trim();
+    const username = document.getElementById('s-user').value.trim();
+    const email = document.getElementById('s-email').value.trim();
+    const password = document.getElementById('s-pass').value;
+    const country = document.getElementById('s-country').value.trim();
+
+    if (!username || !email || !password) { showErr('Username, email, and password are required'); return; }
+    if (password.length < 8) { showErr('Password must be at least 8 characters'); return; }
+    if (!/[A-Z]/.test(password)) { showErr('Password must contain at least one uppercase letter'); return; }
+    if (!/\d/.test(password)) { showErr('Password must contain at least one digit'); return; }
+
+    const btn = document.getElementById('signup-btn');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+
+    try {
+      const res = await fetch(`${API}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name, username, email, password, country })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Signup failed');
+
+      localStorage.setItem('ssp_token', data.access_token);
+      localStorage.setItem('ssp_refresh', data.refresh_token);
+
+      showOk('Account created! Redirecting to dashboard...');
+      setTimeout(() => window.location.href = '/dashboard', 1000);
+    } catch(e) {
+      showErr(e.message);
+      btn.disabled = false; btn.textContent = 'Create Free Account →';
+    }
+  }
+</script>
+</body>
+</html>

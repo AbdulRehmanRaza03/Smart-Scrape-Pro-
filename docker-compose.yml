@@ -1,0 +1,127 @@
+version: "3.9"
+
+services:
+  # ─── FastAPI App ───────────────────────────
+  app:
+    build: .
+    container_name: smartscrape_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/smartscrape
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    env_file:
+      - config/.env
+    volumes:
+      - ./exports:/app/exports
+      - ./logs:/app/logs
+      - ./database:/app/database
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ssp_net
+
+  # ─── Celery Worker ────────────────────────
+  worker:
+    build: .
+    container_name: smartscrape_worker
+    restart: unless-stopped
+    command: celery -A backend.scheduler.tasks.celery_app worker --loglevel=info --queues=scraping,notifications --concurrency=4
+    env_file:
+      - config/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/smartscrape
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./exports:/app/exports
+      - ./logs:/app/logs
+    depends_on:
+      - app
+      - redis
+    networks:
+      - ssp_net
+
+  # ─── Celery Beat ──────────────────────────
+  beat:
+    build: .
+    container_name: smartscrape_beat
+    restart: unless-stopped
+    command: celery -A backend.scheduler.tasks.celery_app beat --loglevel=info
+    env_file:
+      - config/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/smartscrape
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      - worker
+    networks:
+      - ssp_net
+
+  # ─── PostgreSQL ───────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: smartscrape_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: smartscrape
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ssp_net
+
+  # ─── Redis ────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: smartscrape_redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - ssp_net
+
+  # ─── Nginx (prod reverse proxy) ───────────
+  nginx:
+    image: nginx:alpine
+    container_name: smartscrape_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - app
+    networks:
+      - ssp_net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  ssp_net:
+    driver: bridge
